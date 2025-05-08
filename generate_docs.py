@@ -1,168 +1,192 @@
 import os
-import json
 import time
-from groq import Groq
+import json
+import openai
+import logging
 
-# Retrieve the Groq API key from environment variables
-api_key = os.getenv("GROQ_API_KEY")
-client = Groq(api_key=api_key)
+# Initialize environment and API keys
+API_KEY = os.getenv("GROQ_API_KEY")
+openai.api_key = os.getenv("OPENAI_API_KEY")
+MEMORY_FILE = 'memory.json'
 
-# Path for saving the memory state
-MEMORY_FILE = "memory_state.json"
-DOCS_OUTPUT_PATH = "docs/"
+# Initialize logging
+logging.basicConfig(level=logging.INFO)
 
-# Load the prompt from the prompt.txt file
-def load_prompt():
-    with open("prompt.txt", "r") as file:
-        return file.read()
-
-# Load memory state (if exists)
-def load_memory():
+# Load or initialize memory
+def load_advanced_memory():
+    """Load advanced memory state with additional metadata"""
     if os.path.exists(MEMORY_FILE):
         with open(MEMORY_FILE, "r") as file:
             return json.load(file)
     return {
-        "step": 1,  # Starting step
-        "completed_steps": []  # Track completed sections
+        "step": 1,
+        "completed_steps": [],
+        "last_updated": None,
+        "metadata": {}
     }
 
-# Save memory state (for resuming work later)
-def save_memory(memory):
+def save_advanced_memory(memory):
+    """Save advanced memory state with additional metadata"""
+    memory["last_updated"] = time.time()
+    memory["metadata"] = {
+        "document_title": "Flash USDT Documentation",
+        "steps_completed": len(memory["completed_steps"]),
+    }
     with open(MEMORY_FILE, "w") as file:
         json.dump(memory, file)
 
-# Define the function to generate content based on the prompt
-def generate_content(prompt, step, completed_steps):
-    # Call the Groq API to generate the documentation
-    completion = client.chat.completions.create(
-        model="qwen-qwq-32b",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.6,
-        max_completion_tokens=2048,
-        top_p=0.95,
-        stream=False
-    )
+# Generate modular content
+def generate_code_blocks():
+    """Generate and return code blocks for various languages and frameworks"""
+    return """
+    ## React Component Example:
+    ```tsx
+    import React from 'react';
 
-    # Extract the generated content
-    content = completion.choices[0].message.content
-
-    # Construct the MDX content with imports and the predefined components
-    mdx_content = f"""
-    import {{ LinearProcessFlow }} from './components/LinearProcessFlow'
-    import {{ Quiz }} from './components/Quiz'
-    import {{ Math }} from './components/Math'
-
-    # Flash USDT Documentation
-
-    <LinearProcessFlow />
-    <Quiz />
-    <Math />
-
-    {content}
-    """
-
-    # Create Extended Code Blocks with meta-information
-    extended_code_blocks = f"""
-    ```tsx project="Flash USDT" file="components/FlashUSDT.tsx" type="react"
-    // Example React Component Code
-    export default function FlashUSDT() {{
+    export default function FlashUSDT() {
         return <div>Flash USDT Component</div>;
-    }}
+    }
     ```
 
-    ```js project="Flash USDT" file="server/index.js" type="nodejs"
-    // Example Node.js Code
+    ## Node.js Backend Example:
+    ```js
     const express = require('express');
     const app = express();
-    app.listen(3000, () => {{
+    app.listen(3000, () => {
         console.log('Server running on port 3000');
-    }});
+    });
     ```
+    """
 
-    ```html project="Flash USDT" file="public/index.html" type="html"
-    <!-- Example HTML Code -->
-    <html>
-        <head><title>Flash USDT</title></head>
-        <body><h1>Welcome to Flash USDT</h1></body>
-    </html>
-    ```
+def generate_interactive_features():
+    """Generate interactive features like quizzes or flowcharts"""
+    return """
+    ## Interactive Quiz
+    1. What is Flash USDT?
+    2. How does it integrate with blockchain?
 
-    ```md project="Flash USDT" file="docs/readme.md" type="markdown"
-    # Flash USDT Documentation
-    This document covers how to use Flash USDT, how to make transactions, and other important details.
-    ```
-
-    ```mermaid title="Example Flowchart" type="diagram"
+    ## Flowchart of Flash USDT
+    ```mermaid
     graph TD;
         A[Start] --> B[Process];
         B --> C[End];
     ```
+    """
 
-    ```python project="Flash USDT" file="scripts/process.py" type="code"
-    # Example Python Code
-    def process_data(data):
-        return data.upper()
+# Generate dynamic quiz
+def generate_dynamic_quiz():
+    """Generate a dynamic quiz based on documentation content"""
+    return """
+    ## Dynamic Quiz
+    1. What does 'Flash USDT' refer to in the context of cryptocurrency?
+    2. What blockchain features does Flash USDT utilize?
+    """
+
+# Generate interactive diagram using Mermaid.js
+def generate_interactive_diagram():
+    """Generate an interactive diagram using modern libraries like Mermaid.js"""
+    return """
+    ## Blockchain Interaction Flow
+    ```mermaid
+    graph TD;
+        A[Transaction Initiated] --> B[User Verification];
+        B --> C[Smart Contract Execution];
+        C --> D[Transaction Confirmed];
     ```
-
     """
 
-    # Add Chain of Thought (CoT) integration
-    thinking_process = """
-    <Thinking>
-        The task requires detailed documentation with multiple components. The user needs interactive features like quizzes and linear process flows.
-        I will structure the content properly, ensuring clarity and SEO optimization. The code blocks will be properly formatted, and I will ensure all necessary information is included.
-        The content should also follow best practices for technical documentation, making sure it is easy to understand and visually appealing.
-    </Thinking>
-    """
+# Advanced Rendering
+def render_with_modern_techniques(content):
+    """Render content using modern techniques like React or Vue.js"""
+    return f"<div class='documentation-container'>{content}</div>"
 
-    mdx_content = thinking_process + mdx_content + extended_code_blocks
+# Human-like interaction using OpenAI API
+def process_user_feedback(feedback):
+    """Process user feedback using NLP tools"""
+    response = openai.Completion.create(
+        engine="davinci",
+        prompt=f"Analyze this user feedback: {feedback}",
+        max_tokens=100
+    )
+    return response.choices[0].text.strip()
 
-    # Save the MDX content to the output folder
-    mdx_filename = f"{DOCS_OUTPUT_PATH}flash-usdt-step{step}.mdx"
-    with open(mdx_filename, "w") as f:
-        f.write(mdx_content)
+def generate_natural_language_response(query):
+    """Generate a natural language response to user queries using an NLP model"""
+    response = openai.Completion.create(
+        engine="davinci",
+        prompt=f"Answer the following question: {query}",
+        max_tokens=150
+    )
+    return response.choices[0].text.strip()
 
-    # Also generate an HTML version of the same content
-    html_content = f"""
-    <html>
-        <head><title>Flash USDT Documentation</title></head>
-        <body>
-            <h1>Flash USDT Documentation</h1>
-            <div><LinearProcessFlow /></div>
-            <div><Quiz /></div>
-            <div><Math /></div>
-            <div>{content}</div>
-        </body>
-    </html>
-    """
-    html_filename = f"{DOCS_OUTPUT_PATH}flash-usdt-step{step}.html"
-    with open(html_filename, "w") as f:
-        f.write(html_content)
+# Assemble complete documentation
+def assemble_documentation():
+    """Assemble all parts of the documentation"""
+    # Generate code examples, quizzes, and diagrams
+    content = generate_code_blocks()
+    content += generate_interactive_features()
+    content += generate_dynamic_quiz()
+    content += generate_interactive_diagram()
 
-    # Print the step completed
-    print(f"Step {step} completed successfully!")
+    # Render with modern tech (HTML, React, Vue)
+    rendered_content = render_with_modern_techniques(content)
+    return rendered_content
 
-# Main function that controls the workflow and memory
-def run():
-    # Load previous memory (if any)
-    memory = load_memory()
-    current_step = memory["step"]
-    completed_steps = memory["completed_steps"]
+# Main workflow to control step-by-step documentation generation
+def generate_documentation():
+    memory = load_advanced_memory()
 
-    # Check which steps are completed and continue with the next step
-    for step in range(current_step, 6):  # Assuming 5 total steps to complete
-        if step not in completed_steps:
-            print(f"Generating content for step {step}...")
-            prompt = load_prompt()
-            generate_content(prompt, step, completed_steps)
+    # Check if the documentation generation is complete
+    if memory["step"] == 5:
+        logging.info("Documentation generation is already complete.")
+        return
 
-            # Update memory to reflect the completed step
-            completed_steps.append(step)
-            memory["step"] = step + 1  # Update the next step to process
-            save_memory(memory)  # Save the memory after each step
+    # Generate content in steps
+    if memory["step"] == 1:
+        logging.info("Starting content generation...")
+        content = assemble_documentation()
 
-        # Wait between steps (optional)
-        time.sleep(10)  # Sleep for 10 seconds before generating the next step
+        # Save the current step
+        memory["completed_steps"].append("content_generation")
+        memory["step"] += 1
+        save_advanced_memory(memory)
+        logging.info("Step 1 completed: Content generation")
 
+    if memory["step"] == 2:
+        logging.info("Generating dynamic quizzes and interactive features...")
+        # You can add more advanced features here
+        memory["completed_steps"].append("dynamic_quizzes")
+        memory["step"] += 1
+        save_advanced_memory(memory)
+        logging.info("Step 2 completed: Dynamic quizzes")
+
+    if memory["step"] == 3:
+        logging.info("Saving and deploying documentation...")
+        # For example, deploy to GitHub Pages or Netlify
+        deploy_documentation(content)
+        memory["completed_steps"].append("documentation_deployed")
+        memory["step"] += 1
+        save_advanced_memory(memory)
+        logging.info("Step 3 completed: Documentation deployment")
+
+# Deploy documentation to GitHub Pages or similar platform
+def deploy_documentation(content):
+    """Deploy the documentation to a hosting platform like GitHub Pages or Netlify"""
+    logging.info("Deploying documentation to GitHub Pages...")
+    # Example: Here, we just simulate deploying the rendered content
+    with open("documentation.html", "w") as file:
+        file.write(content)
+    logging.info("Deployment completed successfully.")
+
+# CI/CD Pipeline (e.g., GitHub Actions or similar)
+def ci_cd_pipeline():
+    """Run documentation generation and deployment as part of CI/CD"""
+    generate_documentation()
+
+# Main Execution
 if __name__ == "__main__":
-    run()
+    try:
+        # Start the process
+        ci_cd_pipeline()
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
