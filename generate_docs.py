@@ -1,12 +1,10 @@
 import os
 import time
 import json
-import openai
 import logging
 
 # Initialize environment and API keys
 API_KEY = os.getenv("GROQ_API_KEY")
-openai.api_key = os.getenv("OPENAI_API_KEY")
 MEMORY_FILE = 'memory.json'
 
 # Initialize logging
@@ -99,25 +97,6 @@ def generate_interactive_diagram():
 def render_with_modern_techniques(content):
     """Render content using modern techniques like React or Vue.js"""
     return f"<div class='documentation-container'>{content}</div>"
-
-# Human-like interaction using OpenAI API
-def process_user_feedback(feedback):
-    """Process user feedback using NLP tools"""
-    response = openai.Completion.create(
-        engine="davinci",
-        prompt=f"Analyze this user feedback: {feedback}",
-        max_tokens=100
-    )
-    return response.choices[0].text.strip()
-
-def generate_natural_language_response(query):
-    """Generate a natural language response to user queries using an NLP model"""
-    response = openai.Completion.create(
-        engine="davinci",
-        prompt=f"Answer the following question: {query}",
-        max_tokens=150
-    )
-    return response.choices[0].text.strip()
 
 # Assemble complete documentation
 def assemble_documentation():
