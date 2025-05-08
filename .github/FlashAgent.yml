@@ -1,0 +1,43 @@
+name: Generate and Push Flash USDT Docs
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Step 2: Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'  # You can use other versions if needed
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install groq
+
+      # Step 4: Run the Python script to generate MDX content
+      - name: Generate MDX content
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          python generate_docs.py  # This is the Python script that will generate the MDX file
+
+      # Step 5: Commit and push the changes
+      - name: Commit and push generated MDX file
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add docs/flash-usdt.mdx
+          git commit -m "Add generated content for Flash USDT docs"
+          git push
